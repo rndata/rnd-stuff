@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "rnd-stuff"
+version = "0.0.1"
+description = ""
+authors = ["cvb <ccvb3291@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.8, <3.10"
+toolz = "^0.11.1"
+numpy = "^1.20.2"
+scipy = "^1.6.2"
+matplotlib = "^3.4.1"
+
+[tool.poetry.dev-dependencies]
+ipykernel = "^5.5.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
