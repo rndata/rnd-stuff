@@ -18,6 +18,8 @@ pandas-datareader = "^0.10.0"
 
 [tool.poetry.dev-dependencies]
 ipykernel = "^5.5.3"
+mypy = "^0.910"
+flake8 = "^4.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
