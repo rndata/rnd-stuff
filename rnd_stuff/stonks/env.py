@@ -1,17 +1,14 @@
-from collections import namedtuple
-from typing import Any, Dict, Optional, Tuple
+from typing import Optional, Tuple, TypeAlias
 
+import numpy as np
 import pandas as pd
 
-from .acc import total_return
+import gym
+
 from .dataset import Dataset
-from .errors import Inconsistent
 
 
-Observation = namedtuple('Observation', ['env', 'portfolio'])
-
-
-class Env:
+class Env(gym.Env):
     def __init__(
             self,
             dataset: Dataset,
@@ -19,60 +16,36 @@ class Env:
             portfolio: Optional[pd.Series] = None,
     ):
         self.ds = dataset
-        self.assets = self.ds.assets
         self.fee = fee
+        self.init_portfolio = portfolio
 
-        if not portfolio:
-            self.portfolio = pd.Series(
-                {k: 1/len(self.assets) for k in self.assets}
-            )
-        else:
-            self.portfolio = portfolio
+        self.action_space = gym.spaces.Box(
+            low=0.0,
+            high=1.0,
+            shape=(1, len(dataset.assets)),
+            dtype=np.float32
+        )
 
-        self.rebalance_price = None
-        self.check_consistency()
+        self.observation_space = self.ds.obs_space
 
-    def check_consistency(self):
-        if self.portfolio.sum() != 1:
-            self.ds.close()
-            raise Inconsistent(
-                f"Portfolio weights should always sum to 1,"
-                f" got f{self.portfolio.sum()}"
-            )
+    def reset(
+        self,
+        *,
+        seed: Optional[int] = None,
+        return_info: bool = False,
+        options: Optional[dict] = None,
+    ):  # -> ObsType | tuple[ObsType, dict]:
+        self.episode = self.dataset.episode(seed)
+        return next(self.episode)
 
-    def reset(self):
-        obs = self.ds.reset()
-        self.rebalance_price = obs.price
-        return obs
+    def step(self, action):  # -> Tuple[ObsType, float, bool, dict]:
+        pass
+
+    def render(self, mode="human"):
+        pass
 
     def close(self):
-        self.ds.close()
+        pass
 
-    def step(
-            self,
-            action: pd.Series
-    ) -> Tuple[Observation, float, bool, Dict[Any, Any]]:
-        rebalance, portfolio = action[0], action[1:]
-        if rebalance not in (0, 1):
-            raise ValueError(f"rebalance = f{rebalance} should be 0 or 1")
 
-        obs = self.ds.step()
 
-        reward = total_return(
-            obs.price,
-            self.rebalance_price,
-            self.portfolio,
-            self.fee*rebalance,
-        )
-
-        self.rebalance_price = obs.price
-        self.portfolio = portfolio
-
-        self.check_consistency
-
-        return (
-            Observation(env=obs, portfolio=self.portfolio),
-            reward,
-            self.ds.closed,
-            {},
-        )

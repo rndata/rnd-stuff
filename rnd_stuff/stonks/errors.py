@@ -1,10 +1,13 @@
-class EnvError(Exception):
+class StonksError(Exception):
     pass
 
 
-class Inconsistent(EnvError):
+class DatasetError(StonksError):
     pass
 
 
-class DatasetError(EnvError):
-    pass
+class DataSpaceMismatch(DatasetError):
+    def __init__(self, space, data):
+        self.space = space
+        self.data = data
+        super().__init__(f"{space} doesn't match data {data}")
